@@ -124,9 +124,9 @@ void WatchyOrbital::drawNightTime() {
   float sunrise = sun.calcSunrise() / 1440 * 360 + 360;
   float sunset = sun.calcSunset() / 1440 * 360;
 
-  display.setCursor(10, 10);
-  display.setFont(&FreeMono9pt7b);
-  display.println(sunset);
+  //display.setCursor(10, 10);
+  //display.setFont(&FreeMono9pt7b);
+  //display.println(sunset);
 
 
   
