@@ -1,6 +1,9 @@
 #include "Watchy_orbital.h"
 
 #define DEG2RAD 0.0174532925
+#define LAT 42.279594
+#define LON -83.732124
+#define GMT_OFFSET -5
 
 void WatchyOrbital::drawWatchFace() {
   display.fillScreen(GxEPD_WHITE);
@@ -9,6 +12,7 @@ void WatchyOrbital::drawWatchFace() {
   drawMoon();
   drawWatchTime();
   drawBattery();
+  drawNightTime();
 }
 
 
@@ -22,18 +26,34 @@ void WatchyOrbital::drawWatchTime(){
   float dayAngle = 360.0 * (currentTime.Day / 31.0);
   float monthAngle = 360.0 * (currentTime.Month / 12.0);
 
-  // Draw arcs
-  fillArc2(0.0, monthAngle, 26, 19, GxEPD_BLACK, 0.0611);
-  fillArc2(0.0, monthAngle, 26, 19, GxEPD_WHITE, 360 / 12);
+  // 60 minutes to 1, no empty
+  if(currentTime.Minute == 0) {
+    minuteAngle = 360.0;
+    }
 
-  fillArc2(0.0, dayAngle, 48, 17, GxEPD_BLACK, 0.0611);
-  fillArc2(0.0, dayAngle, 48, 17, GxEPD_WHITE, 360 / DaysPerMonth(currentTime.Year, currentTime.Month) );
+  // 24 hours to 1, no empty
+  if(currentTime.Hour == 0) {
+    hourAngle = 360.0;
+    }
 
+  // Draw arcs: black arc, white seperator, black seperators
+  fillArc2(0.0, monthAngle, 18, 19, GxEPD_BLACK, 0.0611);
+  fillArc2(0.0, monthAngle, 18, 19, GxEPD_WHITE, 360 / 12);
+  fillArc2(monthAngle + 360 / 12, 360.0 - 360 / 12, 17, 10, GxEPD_BLACK, 360 / 12);
+
+  fillArc2(0.0, dayAngle, 40, 17, GxEPD_BLACK, 0.0611);
+  fillArc2(0.0, dayAngle, 40, 17, GxEPD_WHITE, 360 / DaysPerMonth(currentTime.Year, currentTime.Month));
+  fillArc2(dayAngle + 360 / DaysPerMonth(currentTime.Year, currentTime.Month), 360.0 -  360 / DaysPerMonth(currentTime.Year, currentTime.Month), 39, 9, GxEPD_BLACK, 360 / DaysPerMonth(currentTime.Year, currentTime.Month));
+  
+  
   fillArc2(0.0, hourAngle, 68, 15, GxEPD_BLACK, 0.0611);
   fillArc2(0.0, hourAngle, 68, 15, GxEPD_WHITE, 360 / 24);
+  fillArc2(hourAngle + 360 / 24, 360.0 - 360 / 24, 64, 8, GxEPD_BLACK, 360 / 24);
 
+  
   fillArc2(0.0, minuteAngle, 86, 13, GxEPD_BLACK, 0.0611);
   fillArc2(0.0, minuteAngle, 86, 13, GxEPD_WHITE, 360 / 60);
+  fillArc2(minuteAngle + 360 / 60, 360.0 - 360 / 60, 83, 7, GxEPD_BLACK, 360 / 60);
 
   display.setCursor(154, 185);
   display.setFont(&FreeMono9pt7b);
@@ -54,6 +74,8 @@ void WatchyOrbital::drawBattery(){
  
   }
 
+//TODO convert to
+//int moonphase = sun.moonPhase(std::time(nullptr));
 void WatchyOrbital::drawMoon(){
 
   long long unix_time = (long long)makeTime(currentTime);  
@@ -87,7 +109,32 @@ void WatchyOrbital::drawMoon(){
   display.drawCircle(17, 183, 16, GxEPD_BLACK);
   }
 
+// OpenWeatherMap requireing lat and lon shortly - how to get access to settings from here?
+void WatchyOrbital::drawNightTime() {
+//  gmtOffset = settings.gmtOffset;
+//  lat = settings.lat;
+//  lon = settings.lon;
 
+  SunSet sun;
+  sun.setPosition(LAT, LON, GMT_OFFSET);
+  sun.setCurrentDate(tmYearToCalendar(currentTime.Year), currentTime.Month, currentTime.Day);
+  sun.setTZOffset(GMT_OFFSET);
+
+  //minutes past midnight. Apparently.
+  float sunrise = sun.calcSunrise() / 1440 * 360 + 360;
+  float sunset = sun.calcSunset() / 1440 * 360;
+
+  display.setCursor(10, 10);
+  display.setFont(&FreeMono9pt7b);
+  display.println(sunset);
+
+
+  
+
+
+  fillArc2(sunset, sunrise, 55, 2, GxEPD_BLACK, 0.0611);
+
+  }
 
 
 void WatchyOrbital::fillArc2(float start_angle, float end_angle, unsigned int radius, unsigned int width, unsigned int colour, float step){

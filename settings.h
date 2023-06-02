@@ -3,7 +3,7 @@
 
 //Weather Settings
 #define CITY_ID "5128581" //New York City https://openweathermap.org/current#cityid
-#define OPENWEATHERMAP_APIKEY "f058fe1cad2afe8e2ddc5d063a64cecb" //use your own API key :)
+#define OPENWEATHERMAP_APIKEY "1f7a03d64fe74951ab16660f20dc4351" //use your own API key :)
 #define OPENWEATHERMAP_URL "http://api.openweathermap.org/data/2.5/weather?id=" //open weather api
 #define TEMP_UNIT "metric" //metric = Celsius , imperial = Fahrenheit
 #define TEMP_LANG "en"
@@ -11,6 +11,9 @@
 //NTP Settings
 #define NTP_SERVER "pool.ntp.org"
 #define GMT_OFFSET_SEC 3600 * -5 //New York is UTC -5 EST, -4 EDT, will be overwritten by weather data
+
+#define LAT 42.279594
+#define LON -83.732124
 
 watchySettings settings{
     .cityID = CITY_ID,
