@@ -1,20 +1,14 @@
 #include "Watchy_orbital.h"
 
-#define DEG2RAD 0.0174532925
-#define LAT 42.279594
-#define LON -83.732124
-#define GMT_OFFSET -5
-
 void WatchyOrbital::drawWatchFace() {
   display.fillScreen(GxEPD_WHITE);
-
+  sun.setPosition(last_lat, last_lon, settings.gmtOffset / 3600);
   display.setTextColor(GxEPD_BLACK);
   drawMoon();
   drawWatchTime();
   drawBattery();
   drawNightTime();
 }
-
 
 void WatchyOrbital::drawWatchTime(){
   int16_t centerX = display.width() / 2;
@@ -74,66 +68,76 @@ void WatchyOrbital::drawBattery(){
  
   }
 
-//TODO convert to
-//int moonphase = sun.moonPhase(std::time(nullptr));
+
 void WatchyOrbital::drawMoon(){
-
   long long unix_time = (long long)makeTime(currentTime);  
-  long long known_new_moon = 1684515180; // may 19 2023
-  
-  long long lunation = 2551707; // 29.5306 days
+  sun.setCurrentDate(tmYearToCalendar(currentTime.Year), currentTime.Month, currentTime.Day);
+  sun.setTZOffset(settings.gmtOffset / 3600);
+  int moonphase = sun.moonPhase(unix_time);
 
-  float phase = ((unix_time - known_new_moon) % 2551707) / 2551707.0;
 
-  //display.setCursor(0, 185);
-  //display.setFont(&FreeMono9pt7b);
-  //display.println(phase);
+  display.setFont(&FreeMono9pt7b);
+  display.setCursor(10, 30);
+  display.println(moonphase);
+  display.setCursor(10, 10);
+  display.println(settings.gmtOffset / 3600);
 
-  if(phase < 0.03) {
-    //new
-    display.fillCircle(17, 183, 16, GxEPD_BLACK);
+    int radius = 16;
+    int moonCenterX = 17;
+    int moonCenterY = 183;
+
+    if(moonphase <= 1 || moonphase >= 29) {
+        // New Moon, draw nothing or a dark circle if the background isn't black
+    } 
+    else if(moonphase >= 2 && moonphase <= 6) {
+        // Waxing Crescent
+        display.fillCircle(moonCenterX, moonCenterY, radius, GxEPD_BLACK);
+        display.fillCircle(moonCenterX + radius/2, moonCenterY, radius, GxEPD_WHITE);
+    } 
+    else if(moonphase >= 7 && moonphase <= 8) {
+        // First Quarter
+        display.fillCircle(moonCenterX, moonCenterY, radius, GxEPD_BLACK);
+        display.fillRect(moonCenterX, moonCenterY - radius, radius, radius*2, GxEPD_WHITE);
+    } 
+    else if(moonphase >= 9 && moonphase <= 14) {
+        // Waxing Gibbous
+        display.fillCircle(moonCenterX, moonCenterY, radius, GxEPD_WHITE);
+        display.fillCircle(moonCenterX - radius/2, moonCenterY, radius, GxEPD_BLACK);
+    } 
+    else if(moonphase >= 15 && moonphase <= 16) {
+        // Full Moon
+        display.fillCircle(moonCenterX, moonCenterY, radius, GxEPD_WHITE);
     }
-  else if(phase < 0.5) {
-    // waxing
-    display.fillCircle(17, 183, 16, GxEPD_BLACK);
-    display.fillRect(17, 167, 16, 32, GxEPD_WHITE);
+    // similar logic for waning phases...
+    else if(moonphase >= 17 && moonphase <= 22) {
+        // Waning Gibbous
+        display.fillCircle(moonCenterX, moonCenterY, radius, GxEPD_WHITE);
+        display.fillCircle(moonCenterX + radius/2, moonCenterY, radius, GxEPD_BLACK);
     }
-  else if(phase < 0.75) {
-    // full
+    else if(moonphase >= 23 && moonphase <= 24) {
+        // Last Quarter
+        display.fillCircle(moonCenterX, moonCenterY, radius, GxEPD_BLACK);
+        display.fillRect(moonCenterX, moonCenterY - radius, radius, radius*2, GxEPD_WHITE);
     }
-  else {
-    //waning
-    display.fillCircle(17, 183, 16, GxEPD_BLACK);
-    display.fillRect(1, 167, 16, 32, GxEPD_WHITE);
+    else if(moonphase >= 25 && moonphase <= 28) {
+        // Waning Crescent
+        display.fillCircle(moonCenterX, moonCenterY, radius, GxEPD_BLACK);
+        display.fillCircle(moonCenterX - radius/2, moonCenterY, radius, GxEPD_WHITE);
     }
+
   display.drawCircle(17, 183, 16, GxEPD_BLACK);
   }
 
-// OpenWeatherMap requireing lat and lon shortly - how to get access to settings from here?
-void WatchyOrbital::drawNightTime() {
-//  gmtOffset = settings.gmtOffset;
-//  lat = settings.lat;
-//  lon = settings.lon;
 
-  SunSet sun;
-  sun.setPosition(LAT, LON, GMT_OFFSET);
+void WatchyOrbital::drawNightTime() {
   sun.setCurrentDate(tmYearToCalendar(currentTime.Year), currentTime.Month, currentTime.Day);
-  sun.setTZOffset(GMT_OFFSET);
+  sun.setTZOffset(settings.gmtOffset / 3600);
 
   //minutes past midnight. Apparently.
   float sunrise = sun.calcSunrise() / 1440 * 360 + 360;
   float sunset = sun.calcSunset() / 1440 * 360;
 
-  //display.setCursor(10, 10);
-  //display.setFont(&FreeMono9pt7b);
-  //display.println(sunset);
-
-
-  
-
-
   fillArc2(sunset, sunrise, 55, 2, GxEPD_BLACK, 0.0611);
-
   }
 
 
@@ -152,23 +156,14 @@ void WatchyOrbital::fillArc2(float start_angle, float end_angle, unsigned int ra
     float cy2 = center_y + (radius + width / 2) * sin((i - 90 ) * DEG2RAD);
 
     display.drawLine(cx1, cy1, cx2, cy2, colour);
-
     }
   }
 
 unsigned int WatchyOrbital::DaysPerMonth(unsigned int year, unsigned int month){
   if (month == 2) {
-    if (year % 4 != 0 || (year % 100 == 0 && year % 400 != 0)) {
-      return 28;
-      } 
-    else {
-      return 29;
-      }
+    if (year % 4 != 0 || (year % 100 == 0 && year % 400 != 0)) { return 28; } 
+    else { return 29; }
     }
-  else if (month == 4 || month == 6 || month == 9 || month == 11) {
-    return 30;
-    }
-  else {
-    return 31;
-    }
+  else if (month == 4 || month == 6 || month == 9 || month == 11) { return 30; }
+  else { return 31; }
   }
