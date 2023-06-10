@@ -18,11 +18,20 @@ class WatchyOrbital : public Watchy{
         WatchyOrbital(const watchySettings& s) : Watchy(s)  {}
         void drawWatchFace();
         void drawWatchTime();
+
+        void drawWatchMinute();
+        void drawWatchHour();
+        void drawWatchDay();
+        void drawWatchMonth();
+
         void drawBattery();
         void drawMoon();
         void drawNightTime();
     private:
-        void fillArc2(float, float, unsigned int, unsigned int, unsigned int, float);
+        void fillArc2(float, float, unsigned int, unsigned int, unsigned int, float); //the line one, for tics
+        void fillArc3(float, float, unsigned int, unsigned int, unsigned int, float); //the triangle one, for not leaving stray pixels
         unsigned int DaysPerMonth(unsigned int, unsigned int);
+        void drawEllipse(int16_t x0, int16_t y0, int16_t rx, int16_t ry, uint16_t color); // https://github.com/adafruit/Adafruit-GFX-Library/pull/217
+        void fillEllipse(int16_t x0, int16_t y0, int16_t rx, int16_t ry, uint16_t color); // https://github.com/adafruit/Adafruit-GFX-Library/pull/217
   };
 #endif

@@ -8,22 +8,43 @@ void WatchyOrbital::drawWatchFace() {
   drawWatchTime();
   drawBattery();
   drawNightTime();
-}
+
+  display.setFont(&FreeMono9pt7b);
+  display.setCursor(10, 10);
+  display.println(esp_get_free_heap_size());
+  }
+
 
 void WatchyOrbital::drawWatchTime(){
-  int16_t centerX = display.width() / 2;
-  int16_t centerY = display.height() / 2;
+  drawWatchMinute();
+  drawWatchHour();
+  drawWatchDay();
+  drawWatchMonth();
 
-  // Calculate arc end points
+  display.setCursor(154, 185);
+  display.setFont(&FreeMono9pt7b);
+  display.println(tmYearToCalendar(currentTime.Year));
+  }
+
+
+void WatchyOrbital::drawWatchMinute(){
   float minuteAngle = 360.0 * (currentTime.Minute / 60.0);
-  float hourAngle = 360.0 * (currentTime.Hour / 24.0);
-  float dayAngle = 360.0 * (currentTime.Day / 31.0);
-  float monthAngle = 360.0 * (currentTime.Month / 12.0);
+  int tick = 360 / 60;
 
   // 60 minutes to 1, no empty
   if(currentTime.Minute == 0) {
     minuteAngle = 360.0;
     }
+
+  fillArc3(0.0, minuteAngle, 86, 13, GxEPD_BLACK, 1);
+  fillArc2(tick, minuteAngle - tick, 86, 13, GxEPD_WHITE, tick);
+  fillArc2(minuteAngle + tick, 360 - tick, 83, 7, GxEPD_BLACK, tick);
+  }
+
+
+void WatchyOrbital::drawWatchHour(){
+  float hourAngle = 360.0 * (currentTime.Hour / 24.0);
+  int tick = 360 / 24;
 
   // 24 hours to 1, no empty
   if(currentTime.Hour == 0) {
@@ -31,28 +52,33 @@ void WatchyOrbital::drawWatchTime(){
     }
 
   // Draw arcs: black arc, white seperator, black seperators
-  fillArc2(0.0, monthAngle, 18, 19, GxEPD_BLACK, 0.0611);
-  fillArc2(0.0, monthAngle, 18, 19, GxEPD_WHITE, 360 / 12);
-  fillArc2(monthAngle + 360 / 12, 360.0 - 360 / 12, 17, 10, GxEPD_BLACK, 360 / 12);
-
-  fillArc2(0.0, dayAngle, 40, 17, GxEPD_BLACK, 0.0611);
-  fillArc2(0.0, dayAngle, 40, 17, GxEPD_WHITE, 360 / DaysPerMonth(currentTime.Year, currentTime.Month));
-  fillArc2(dayAngle + 360 / DaysPerMonth(currentTime.Year, currentTime.Month), 360.0 -  360 / DaysPerMonth(currentTime.Year, currentTime.Month), 39, 9, GxEPD_BLACK, 360 / DaysPerMonth(currentTime.Year, currentTime.Month));
-  
-  
-  fillArc2(0.0, hourAngle, 68, 15, GxEPD_BLACK, 0.0611);
-  fillArc2(0.0, hourAngle, 68, 15, GxEPD_WHITE, 360 / 24);
-  fillArc2(hourAngle + 360 / 24, 360.0 - 360 / 24, 64, 8, GxEPD_BLACK, 360 / 24);
-
-  
-  fillArc2(0.0, minuteAngle, 86, 13, GxEPD_BLACK, 0.0611);
-  fillArc2(0.0, minuteAngle, 86, 13, GxEPD_WHITE, 360 / 60);
-  fillArc2(minuteAngle + 360 / 60, 360.0 - 360 / 60, 83, 7, GxEPD_BLACK, 360 / 60);
-
-  display.setCursor(154, 185);
-  display.setFont(&FreeMono9pt7b);
-  display.println(tmYearToCalendar(currentTime.Year));
+  fillArc3(0.0, hourAngle, 68, 15, GxEPD_BLACK, 1);
+  fillArc2(tick, hourAngle - tick, 68, 15, GxEPD_WHITE, tick);
+  fillArc2(hourAngle + tick, 360 - tick, 64, 8, GxEPD_BLACK, tick);
   }
+
+
+void WatchyOrbital::drawWatchDay(){
+  float dayAngle = 360.0 * (currentTime.Day / 31.0);
+  int tick = 360 / DaysPerMonth(currentTime.Year, currentTime.Month);
+
+  // Draw arcs: black arc, white seperator, black seperators
+  fillArc3(0.0, dayAngle, 40, 17, GxEPD_BLACK, 2);
+  fillArc2(tick, dayAngle - tick, 40, 17, GxEPD_WHITE, tick);
+  fillArc2(dayAngle + tick, 360 - tick, 39, 9, GxEPD_BLACK, tick); 
+  }
+
+
+void WatchyOrbital::drawWatchMonth(){
+  float monthAngle = 360.0 * (currentTime.Month / 12.0);
+  int tick = 360 / 12;
+
+  // Draw arcs: black arc, white seperator, black seperators
+  fillArc3(0.0, monthAngle, 18, 19, GxEPD_BLACK, 2);
+  fillArc2(tick, monthAngle - tick, 18, 19, GxEPD_WHITE, tick);
+  fillArc2(monthAngle + tick, 360 - tick, 17, 10, GxEPD_BLACK, tick);
+  }
+
 
 void WatchyOrbital::drawBattery(){
     float VBAT = getBatteryVoltage();
@@ -76,56 +102,34 @@ void WatchyOrbital::drawMoon(){
   int moonphase = sun.moonPhase(unix_time);
 
 
-  display.setFont(&FreeMono9pt7b);
-  display.setCursor(10, 30);
-  display.println(moonphase);
-  display.setCursor(10, 10);
-  display.println(settings.gmtOffset / 3600);
+  int radius = 16;
+  int moonCenterX = 17;
+  int moonCenterY = 183;
 
-    int radius = 16;
-    int moonCenterX = 17;
-    int moonCenterY = 183;
 
-    if(moonphase <= 1 || moonphase >= 29) {
-        // New Moon, draw nothing or a dark circle if the background isn't black
-    } 
-    else if(moonphase >= 2 && moonphase <= 6) {
-        // Waxing Crescent
-        display.fillCircle(moonCenterX, moonCenterY, radius, GxEPD_BLACK);
-        display.fillCircle(moonCenterX + radius/2, moonCenterY, radius, GxEPD_WHITE);
-    } 
-    else if(moonphase >= 7 && moonphase <= 8) {
-        // First Quarter
-        display.fillCircle(moonCenterX, moonCenterY, radius, GxEPD_BLACK);
-        display.fillRect(moonCenterX, moonCenterY - radius, radius, radius*2, GxEPD_WHITE);
-    } 
-    else if(moonphase >= 9 && moonphase <= 14) {
-        // Waxing Gibbous
-        display.fillCircle(moonCenterX, moonCenterY, radius, GxEPD_WHITE);
-        display.fillCircle(moonCenterX - radius/2, moonCenterY, radius, GxEPD_BLACK);
-    } 
-    else if(moonphase >= 15 && moonphase <= 16) {
-        // Full Moon
-        display.fillCircle(moonCenterX, moonCenterY, radius, GxEPD_WHITE);
+
+  display.fillCircle(moonCenterX, moonCenterY, radius, GxEPD_BLACK);
+
+  // 0 new, 29 & 30 new, 15 full
+  if(moonphase > 0 && moonphase <= 15) {
+    //display.fillCircle(moonCenterX - ((((moonphase - 1) / 28.0) - 0.5) * radius * 2), moonCenterY, radius, GxEPD_WHITE);
+    fillEllipse(moonCenterX - ((((moonphase - 1) / 28.0) - 0.5) * radius * 2), moonCenterY,  (15 / 14) * (moonphase - 1) + 1, radius, GxEPD_WHITE);
     }
-    // similar logic for waning phases...
-    else if(moonphase >= 17 && moonphase <= 22) {
-        // Waning Gibbous
-        display.fillCircle(moonCenterX, moonCenterY, radius, GxEPD_WHITE);
-        display.fillCircle(moonCenterX + radius/2, moonCenterY, radius, GxEPD_BLACK);
-    }
-    else if(moonphase >= 23 && moonphase <= 24) {
-        // Last Quarter
-        display.fillCircle(moonCenterX, moonCenterY, radius, GxEPD_BLACK);
-        display.fillRect(moonCenterX, moonCenterY - radius, radius, radius*2, GxEPD_WHITE);
-    }
-    else if(moonphase >= 25 && moonphase <= 28) {
-        // Waning Crescent
-        display.fillCircle(moonCenterX, moonCenterY, radius, GxEPD_BLACK);
-        display.fillCircle(moonCenterX - radius/2, moonCenterY, radius, GxEPD_WHITE);
+  // 0 new, 29 & 30 new, 15 full
+  if(moonphase > 15 && moonphase < 29) {
+    //display.fillCircle(moonCenterX - ((((moonphase - 1) / 28.0) - 0.5) * radius * 2), moonCenterY, radius, GxEPD_WHITE);
+    fillEllipse(moonCenterX - ((((moonphase - 1) / 28.0) - 0.5) * radius * 2), moonCenterY,  (-15 / 13) * (moonphase - 15) + 16, radius, GxEPD_WHITE);
     }
 
-  display.drawCircle(17, 183, 16, GxEPD_BLACK);
+
+//  display.setFont(&FreeMono9pt7b);
+//  display.setCursor(10, 30);
+//  display.println(moonphase);
+//  display.setCursor(10, 50);
+//  display.println(183 + ((((moonphase - 1) / 28.0) - 0.5) * radius * 2));
+
+
+  display.drawCircle(moonCenterX, moonCenterY, radius, GxEPD_BLACK);
   }
 
 
@@ -137,7 +141,7 @@ void WatchyOrbital::drawNightTime() {
   float sunrise = sun.calcSunrise() / 1440 * 360 + 360;
   float sunset = sun.calcSunset() / 1440 * 360;
 
-  fillArc2(sunset, sunrise, 55, 2, GxEPD_BLACK, 0.0611);
+  fillArc3(sunset, sunrise, 55, 2, GxEPD_BLACK, 1);
   }
 
 
@@ -159,6 +163,31 @@ void WatchyOrbital::fillArc2(float start_angle, float end_angle, unsigned int ra
     }
   }
 
+//the triangles version
+void WatchyOrbital::fillArc3(float start_angle, float end_angle, unsigned int radius, unsigned int width, unsigned int colour, float step){
+  unsigned int center_x = 100;
+  unsigned int center_y = 100;
+
+  float w = width / 2;
+
+  // Draw colour blocks every inc degrees
+  for (float i = start_angle; i <= end_angle - step; i += step) {
+
+    float cx1 = center_x + (radius - width / 2) * cos((i - 90 ) * DEG2RAD);
+    float cy1 = center_y + (radius - width / 2) * sin((i - 90 ) * DEG2RAD);
+    float cx2 = center_x + (radius + width / 2) * cos((i - 90 ) * DEG2RAD);
+    float cy2 = center_y + (radius + width / 2) * sin((i - 90 ) * DEG2RAD);
+    float cx3 = center_x + (radius - width / 2) * cos((i - 90 + step ) * DEG2RAD);
+    float cy3 = center_y + (radius - width / 2) * sin((i - 90 + step ) * DEG2RAD);
+    float cx4 = center_x + (radius + width / 2) * cos((i - 90 + step ) * DEG2RAD);
+    float cy4 = center_y + (radius + width / 2) * sin((i - 90 + step ) * DEG2RAD);
+
+    //display.drawLine(cx1, cy1, cx2, cy2, colour);
+    display.fillTriangle(cx1, cy1, cx2, cy2, cx3, cy3, colour);
+    display.fillTriangle(cx2, cy2, cx3, cy3, cx4, cy4, colour);
+    }
+  }
+
 unsigned int WatchyOrbital::DaysPerMonth(unsigned int year, unsigned int month){
   if (month == 2) {
     if (year % 4 != 0 || (year % 100 == 0 && year % 400 != 0)) { return 28; } 
@@ -167,3 +196,111 @@ unsigned int WatchyOrbital::DaysPerMonth(unsigned int year, unsigned int month){
   else if (month == 4 || month == 6 || month == 9 || month == 11) { return 30; }
   else { return 31; }
   }
+
+
+// https://github.com/adafruit/Adafruit-GFX-Library/pull/217 code by Soyunr - contributed under BSD license
+void WatchyOrbital::drawEllipse(int16_t x0, int16_t y0, int16_t rx, int16_t ry, uint16_t color) {
+	int16_t Rx2 = rx*rx;
+	int16_t Ry2 = ry*ry;
+	int16_t twoRx2 = 2*Rx2;
+	int16_t twoRy2 = 2*Ry2;
+	int16_t p;
+	int16_t x = 0;
+	int16_t y = ry;
+	int16_t px = 0;
+	int16_t py = twoRx2*y;
+	display.startWrite();
+	display.writePixel(x0 + x,y0 + y,color);
+	display.writePixel(x0 - x,y0 + y,color);
+	display.writePixel(x0 + x,y0 - y,color);
+	display.writePixel(x0 - x,y0 - y,color);
+	//region1
+	p = (int16_t)(Ry2-Rx2*ry+0.25*Rx2);
+	while(px < py){
+		x++;
+		px += twoRy2;
+		if(p < 0)
+			p += Ry2 + px;
+		else{
+			y--;
+			py -= twoRx2;
+			p += Ry2 + px - py;
+		}
+		display.writePixel(x0 + x,y0 + y,color);
+		display.writePixel(x0 - x,y0 + y,color);
+		display.writePixel(x0 + x,y0 - y,color);
+		display.writePixel(x0 - x,y0 - y,color);
+	}
+	//region2
+	p = (int16_t)(Ry2*(x+0.5)*(x+0.5)+Rx2*(y-1)*(y-1)-Rx2*Ry2);
+	while(y > 0){
+		y--;
+		py -= twoRx2;
+		if(p > 0)
+			p += Rx2 - py;
+		else{
+			x++;
+			px += twoRy2;
+			p += Rx2 - py + px;
+		}
+		display.writePixel(x0 + x,y0 + y,color);
+		display.writePixel(x0 - x,y0 + y,color);
+		display.writePixel(x0 + x,y0 - y,color);
+		display.writePixel(x0 - x,y0 - y,color);
+	}
+	display.endWrite();
+}
+
+// gpt-4 conversion
+void WatchyOrbital::fillEllipse(int16_t x0, int16_t y0, int16_t rx, int16_t ry, uint16_t color) {
+    int16_t Rx2 = rx * rx;
+    int16_t Ry2 = ry * ry;
+    int16_t twoRx2 = 2 * Rx2;
+    int16_t twoRy2 = 2 * Ry2;
+    int16_t p;
+    int16_t x = 0;
+    int16_t y = ry;
+    int16_t px = 0;
+    int16_t py = twoRx2 * y;
+
+    display.startWrite();
+
+    // Draw initial vertical line at center
+    display.writeFastVLine(x0, y0 - y, 2 * y, color);
+
+    // Region 1
+    p = (int16_t)(Ry2 - Rx2 * ry + 0.25 * Rx2);
+    while (px < py) {
+        x++;
+        px += twoRy2;
+        if (p < 0)
+            p += Ry2 + px;
+        else {
+            y--;
+            py -= twoRx2;
+            p += Ry2 + px - py;
+        }
+        // Draw vertical lines instead of individual pixels
+        display.writeFastVLine(x0 + x, y0 - y, 2 * y, color);
+        display.writeFastVLine(x0 - x, y0 - y, 2 * y, color);
+    }
+
+    // Region 2
+    p = (int16_t)(Ry2 * (x + 0.5) * (x + 0.5) + Rx2 * (y - 1) * (y - 1) - Rx2 * Ry2);
+    while (y > 0) {
+        y--;
+        py -= twoRx2;
+        if (p > 0)
+            p += Rx2 - py;
+        else {
+            x++;
+            px += twoRy2;
+            p += Rx2 - py + px;
+        }
+        // Draw vertical lines instead of individual pixels
+        display.writeFastVLine(x0 + x, y0 - y, 2 * y, color);
+        display.writeFastVLine(x0 - x, y0 - y, 2 * y, color);
+    }
+
+    display.endWrite();
+}
