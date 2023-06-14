@@ -22,13 +22,13 @@ void WatchyOrbital::drawWatchTime() {
   drawWatchMonth();
 
   display.setFont(&FreeSansBold9pt7b);
-  display.setCursor(174, 175);
+  display.setCursor(174, 182);
 
   char buffer[3];
   sprintf(buffer, "%+03d", settings.gmtOffset / 3600);
 
   display.println(buffer);
-  display.setCursor(160, 191);
+  display.setCursor(160, 198);
   display.println(tmYearToCalendar(currentTime.Year));
 
   //drawStopwatch();
