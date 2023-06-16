@@ -2,7 +2,7 @@
 // Copyright 2021 Sudrien _+watchy@sudrien.net
 // Released under free MIT License : https://github.com/sudrien/watchyorbital/blob/main/LICENSE
 
-#include "Watchy_orbital.h"
+#include "watchy_orbital.h"
 #include "settings.h"
 
 WatchyOrbital watchy(settings);
