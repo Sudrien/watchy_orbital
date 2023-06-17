@@ -8,5 +8,5 @@ Arcs, from outside to inside, are Minutes, 24 hours, sunset/sunrise, day of mont
 
 Labels, clockwise, are battery voltage, timezone offset & year, moon phase, and day of week.
 
-Sunrise & Sunset are dependent on LAT and LON in settings.h. 
+Sunrise & Sunset are dependent on LAT and LON in settings.h. these should be set even if wifi and NTP are not configured. 
 
