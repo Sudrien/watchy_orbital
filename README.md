@@ -1,4 +1,4 @@
-# WatchyOrbital
+# watchy_orbital
 
 Tools >> Manage Libraries >> Add "Sunset" (tested with 1.1.7)
 
