@@ -1,6 +1,6 @@
 // Orbital for Watchy by Sudrien
-// Copyright 2021 Sudrien _+watchy@sudrien.net
-// Released under free MIT License : https://github.com/sudrien/watchyorbital/blob/main/LICENSE
+// Copyright 2023 Sudrien _+watchy@sudrien.net
+// Released under free MIT License : https://github.com/sudrien/watchy_orbital/blob/main/LICENSE
 
 #include "watchy_orbital.h"
 #include "settings.h"
