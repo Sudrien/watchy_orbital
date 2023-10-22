@@ -119,7 +119,7 @@ void WatchyOrbital::drawBattery() {
 
 
 void WatchyOrbital::drawMoon() {
-  long long unix_time = (long long)makeTime(currentTime);
+  long long unix_time = makeTime(currentTime) - settings.gmtOffset;
   sun.setCurrentDate(tmYearToCalendar(currentTime.Year), currentTime.Month, currentTime.Day);
   sun.setTZOffset(settings.gmtOffset / 3600);
   int moonphase = sun.moonPhase(unix_time);
