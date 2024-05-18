@@ -12,3 +12,5 @@ Labels, clockwise, are battery voltage, timezone offset & year, moon phase, and 
 
 Sunrise & Sunset are dependent on LAT and LON in settings.h. these should be set even if wifi and NTP are not configured. 
 
+https://github.com/Cqoicebordel/Watchfaces/tree/main/Orbitalis a fork of this code.
+
